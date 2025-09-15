@@ -13,5 +13,22 @@ class Timetable {
     for (final UntisPeriod period in timetable.periods) {
       print('Subject: ${period.subject?.longName}, Room: ${period.room?.name}, Teacher: ${period.teacher?.lastName}');
     }
+
+    final UntisTimeGrid timegrid = await
+    session.timeGrid;
+
+    // Use Timetable and TimeGrid to group by day
+    final List<List<UntisPeriod?>> days = timetable.groupedPeriods(timegrid);
+
+    // Use this data
+    for (final UntisPeriod? period in days[0]) {
+      if (period == null) {
+        print("Nothing here");
+        continue;
+      }
+      final int hour = period.startDateTime.hour;
+      final int minute = period.startDateTime.minute;
+      print('Time: $hour:$minute Subject: ${period.subject}');
+    }
   }
 }
