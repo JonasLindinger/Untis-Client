@@ -66,10 +66,6 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     final numberOfSlots = (latestHour - earliestHour + 1).clamp(1, 24);
     final timeSlots = List.generate(numberOfSlots, (index) => earliestHour + index);
 
-    final pageWeek = weeks![0];
-
-    print(week.toString());
-
     return Row(
       children: [
         TimeScale(timeSlots),
