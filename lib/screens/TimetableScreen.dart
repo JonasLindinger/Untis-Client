@@ -23,7 +23,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     session = widget.session;
 
-    Timetable.GetTimeTable(session);
+    Timetable.GetTimetable(session);
   }
 
   @override

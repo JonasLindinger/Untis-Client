@@ -1,7 +1,7 @@
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
 
 class Timetable {
-  static Future<void> GetTimeTable(UntisSession session) async {
+  static Future<void> GetTimetable(UntisSession session) async {
     // Gets the timetable from the current date
     final UntisTimetable timetable = await session.getTimetable(
       endDate: DateTime.now().add(const Duration(days: 7))
