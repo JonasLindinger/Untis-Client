@@ -21,10 +21,10 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
   @override
   void initState() {
     super.initState();
-    _loadTimetable();
+    LoadTimetable();
   }
 
-  Future<void> _loadTimetable() async {
+  Future<void> LoadTimetable() async {
     final result = await Timetable.GetTimeGrid(widget.session);
 
     if (result.isEmpty) return;
@@ -65,28 +65,46 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     final numberOfSlots = (latestHour - earliestHour + 1).clamp(1, 24);
     final timeSlots = List.generate(numberOfSlots, (index) => earliestHour + index);
 
+    return Row(
+      children: [
+        TimeScale(timeSlots),
+        for (final weekDay in weekdays)
+          Day(weekDay),
+      ],
+    );
+
     return Column(
       children: [
-        // Day headers + spacing for time column
-        Row(
-          children: [
-            Container(width: 50), // space for time column
-            ...weekdays.map((d) => Expanded(
-              child: Container(
-                height: 40,
-                alignment: Alignment.center,
-                color: CustomColors.primary,
-                child: Text(
-                  d,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
-                  overflow: TextOverflow.ellipsis,
+        // Top bar
+        Container(
+          height: 40,
+          color: CustomColors.primary,
+          padding: EdgeInsets.only(left: 50),
+
+          // Week days
+          child: Container(
+            child: Row(
+              children: [
+                Container(),
+                  ...weekdays.map((day) => Expanded(
+                  child: Container(
+                    height: 40,
+                    alignment: Alignment.center,
+                    color: CustomColors.primary,
+                    child: Text(
+                      day,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )),
                 ),
-              ),
-            )).toList(),
-          ],
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 4),
         // Main timetable
@@ -212,6 +230,82 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget Day(String day) {
+    return Expanded( // Try to use the full width.
+      child: Column(
+        children: [
+          // Top bar (day)
+          Container(
+            height: 40,
+            width: 100,
+            color: CustomColors.primary,
+            alignment: Alignment.center,
+            child: Text(
+              day,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          // Small padding
+          SizedBox(
+            height: 4,
+          ),
+
+          // Periods
+          Column(
+            // Todo: Do the actual period display
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget TimeScale(List<int> timeSlots) {
+    return SizedBox(
+      width: 50,
+      child: Column(
+        children: [
+          // Top bar
+          Container(
+            height: 40,
+            color: CustomColors.primary,
+          ),
+
+          // Small padding
+          SizedBox(
+            height: 4,
+          ),
+
+          // Times
+          Column(
+            children: timeSlots.map((hour) => Container(
+              height: 60,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade700),
+                ),
+              ),
+              child: Text(
+                '$hour:00',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            )).toList(),
+          ),
+        ],
+      ),
     );
   }
 }

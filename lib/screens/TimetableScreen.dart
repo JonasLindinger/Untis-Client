@@ -44,7 +44,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
       ),
       body: Container(
         color: CustomColors.backgroundColor,
-        padding: const EdgeInsets.all(8.0),
+        // padding: const EdgeInsets.all(8.0),
         child: TimetableCalendarView(session: session),
       ),
       bottomNavigationBar: BottomNavigationBar(
