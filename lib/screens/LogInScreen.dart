@@ -13,6 +13,12 @@ class LogInScreen extends StatelessWidget {
     final TextEditingController usernameController = new TextEditingController();
     final TextEditingController passwordController = new TextEditingController();
 
+    UntisConnection.TryAutoLogIn(
+      onConnected: () {
+        LoadHomeScreen(context);
+      }
+    );
+
     return MaterialApp(
       home: Scaffold(
         backgroundColor: CustomColors.backgroundColor,
