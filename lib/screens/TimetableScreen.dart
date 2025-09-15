@@ -24,10 +24,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text("Timetable"),
+        title: Text(
+          "Timetable",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 28,
+            color: colors.onSurface,
+          ),
+        ),
       ),
       body: TimetableCalendarView(session: session),
       bottomNavigationBar: NavigationBar(
