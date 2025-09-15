@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untis_client/screens/login.dart';
+import 'package:untis_client/screens/LogInScreen.dart';
 
 void main() async {
   runApp(const MyApp());
