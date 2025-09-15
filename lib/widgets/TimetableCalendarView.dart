@@ -12,6 +12,7 @@ class TimetableCalendarView extends StatefulWidget {
 }
 
 class _TimetableCalendarViewState extends State<TimetableCalendarView> {
+  final double hourHeight = 90; // was 60, increase to make periods longer
   List<List<List<UntisPeriod?>>>? weeks; // weeks -> days -> periods
   int currentWeek = 0;
 
@@ -66,16 +67,24 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     final numberOfSlots = (latestHour - earliestHour + 1).clamp(1, 24);
     final timeSlots = List.generate(numberOfSlots, (index) => earliestHour + index);
 
-    return Row(
+    return ListView(
       children: [
-        TimeScale(timeSlots),
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: weekdays.map((day) {
-              return Day(day, week, timeSlots, earliestHour);
-            }).toList(),
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Time scale scrolls together
+            TimeScale(timeSlots),
+
+            // Days
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: weekdays.map((day) {
+                  return Day(day, week, timeSlots, earliestHour);
+                }).toList(),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -90,9 +99,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     return Expanded(
       child: Column(
         children: [
-          // Top bar (day)
           Container(
-            height: 40,
+            height: 30,
             width: double.infinity,
             color: colors.secondaryContainer,
             alignment: Alignment.center,
@@ -101,95 +109,93 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
               style: TextStyle(
                 color: colors.onSecondaryContainer,
                 fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontSize: 12, // smaller
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
 
-          const SizedBox(height: 4),
+          const SizedBox(height: 2), // smaller gap
 
           // Periods
-          Flexible(
-            child: SingleChildScrollView(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 1),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(2),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: Stack(
+              children: [
+                // Background time slots for spacing
+                Column(
+                  children: timeSlots.map((_) => Container(height: hourHeight)).toList(),
                 ),
-                child: Stack(
-                  children: [
-                    // Background time slots for spacing
-                    Column(
-                      children: timeSlots.map((_) => Container(height: 60)).toList(),
+
+                // Actual periods
+                ...dayPeriods.map((period) {
+                  if (period == null) return const SizedBox.shrink();
+
+                  final startHour = period.startDateTime.hour;
+                  final startMinute = period.startDateTime.minute;
+                  final endHour = period.endDateTime.hour;
+                  final endMinute = period.endDateTime.minute;
+
+                  final startOffset = ((startHour + startMinute / 60) - earliestHour) * hourHeight;
+                  final height = ((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourHeight;
+
+                  return Positioned(
+                    top: startOffset,
+                    left: 2, // small padding from edges
+                    right: 2,
+                    height: height,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 2,
+                            offset: Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            period.subject?.longName ?? "Unknown",
+                            style: TextStyle(
+                              fontSize: 11, // slightly smaller
+                              fontWeight: FontWeight.bold,
+                              color: colors.onPrimaryContainer,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            period.room?.name ?? "Unknown",
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: colors.onPrimaryContainer.withOpacity(0.8),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            period.teacher?.lastName ?? "Unknown",
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: colors.onPrimaryContainer.withOpacity(0.8),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-
-                    // Actual periods
-                    ...dayPeriods.map((period) {
-                      if (period == null) return const SizedBox.shrink();
-
-                      final startHour = period.startDateTime.hour;
-                      final startMinute = period.startDateTime.minute;
-                      final endHour = period.endDateTime.hour;
-                      final endMinute = period.endDateTime.minute;
-
-                      final startOffset = ((startHour + startMinute / 60) - earliestHour) * 60;
-                      final height = ((endHour + endMinute / 60) - (startHour + startMinute / 60)) * 60;
-
-                      return Positioned(
-                        top: startOffset,
-                        left: 0,
-                        right: 0,
-                        height: height,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: colors.primaryContainer,
-                            borderRadius: BorderRadius.circular(6),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 2,
-                                offset: Offset(1, 1),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                period.subject?.longName ?? "Unknown",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.onPrimaryContainer,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                period.room?.name ?? "Unknown",
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: colors.onPrimaryContainer.withOpacity(0.8)
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                period.teacher?.lastName ?? "Unknown",
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: colors.onPrimaryContainer.withOpacity(0.8),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ],
-                ),
-              ),
+                  );
+                }).toList(),
+              ],
             ),
           ),
         ],
@@ -206,7 +212,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
         children: [
           // Top bar
           Container(
-            height: 40,
+            height: 30,
             color: colors.secondaryContainer,
           ),
 
@@ -218,7 +224,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
           // Times
           Column(
             children: timeSlots.map((hour) => Container(
-              height: 60,
+              height: hourHeight,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 border: Border(
