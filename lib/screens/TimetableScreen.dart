@@ -1,5 +1,6 @@
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:untis_client/utils/Timetable.dart';
 
 class TimetableScreen extends StatefulWidget {
   final UntisSession session;
@@ -21,6 +22,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
     super.initState();
 
     session = widget.session;
+
+    Timetable.GetTimeTable(session);
   }
 
   @override
