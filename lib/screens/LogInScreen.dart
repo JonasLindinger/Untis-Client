@@ -1,5 +1,6 @@
+import 'package:dart_untis_mobile/dart_untis_mobile.dart';
 import 'package:flutter/material.dart';
-import 'package:untis_client/screens/HomeScreen.dart';
+import 'package:untis_client/screens/TimetableScreen.dart';
 import 'package:untis_client/utils/CustomColors.dart';
 import 'package:untis_client/utils/UntisConnection.dart';
 
@@ -14,8 +15,8 @@ class LogInScreen extends StatelessWidget {
     final TextEditingController passwordController = new TextEditingController();
 
     UntisConnection.TryAutoLogIn(
-      onConnected: () {
-        LoadHomeScreen(context);
+      onConnected: (session) {
+        LoadHomeScreen(context, session);
       }
     );
 
@@ -74,8 +75,8 @@ class LogInScreen extends StatelessWidget {
                         school: schoolController.text,
                         username: usernameController.text,
                         password: passwordController.text,
-                        onConnected: () {
-                          LoadHomeScreen(context);
+                        onConnected: (session) {
+                          LoadHomeScreen(context, session);
                         },
                       );
                     },
@@ -144,10 +145,12 @@ class LogInScreen extends StatelessWidget {
     );
   }
 
-  void LoadHomeScreen(BuildContext context) {
+  void LoadHomeScreen(BuildContext context, UntisSession session) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
+      MaterialPageRoute(builder: (context) => TimetableScreen(
+        session: session
+      )),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UntisConnection {
@@ -8,7 +9,7 @@ class UntisConnection {
   static const PASSWORDPREF = "PASSWORD";
 
   static Future<void> TryAutoLogIn({
-    Function() onConnected = UntisConnection.Ignore
+    Function(UntisSession) onConnected = UntisConnection.Ignore
   }) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -17,63 +18,66 @@ class UntisConnection {
       prefs.containsKey(USERPREF) &&
       prefs.containsKey(PASSWORDPREF)) {
 
-      // Auto login
-      await ConnectToUntis(
-        server: prefs.getString(SERVERPREF)!,
-        school: prefs.getString(SCHOOLPREF)!,
-        username: prefs.getString(USERPREF)!,
-        password: prefs.getString(PASSWORDPREF)!
-      );
+      try {
+        var session = await ConnectToUntis(
+            server: prefs.getString(SERVERPREF)!,
+            school: prefs.getString(SCHOOLPREF)!,
+            username: prefs.getString(USERPREF)!,
+            password: prefs.getString(PASSWORDPREF)!
+        );
 
-      // Call the on connected method
-      onConnected();
+        // Call the on connected method
+        onConnected(session);
+      }
+      catch (e, st) {
+        print(e);
+        print(st);
+      }
     }
     else {
       // No date to login
     }
   }
 
-  static Future<void> ConnectToUntis({
+  static Future<UntisSession> ConnectToUntis({
     required String server,
     required String school,
     required String username,
     required String password,
-    Function() onConnected = UntisConnection.Ignore,
+    Function(UntisSession) onConnected = UntisConnection.Ignore,
   }) async {
     server = GetServerURL(server);
 
-    var session;
     try {
-      session = await UntisSession.init(
+      UntisSession session = await UntisSession.init(
         server,
         school,
         username,
         password,
       );
+
+      print("Connected as: " + session.username);
+
+      // Saving data
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString(SERVERPREF, server);
+      prefs.setString(SCHOOLPREF, school);
+      prefs.setString(USERPREF, username);
+      prefs.setString(PASSWORDPREF, password);
+
+      // Call the on connected method
+      onConnected(session);
+
+      return session;
     }
     catch (e, st) {
       print(e);
       print(st);
     }
 
-    if (session == null) {
-      print("Failed to connect to Untis!");
-      return;
-    }
-
-    print("Connected as: " + session.username);
-
-    // Saving data
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString(SERVERPREF, server);
-    prefs.setString(SCHOOLPREF, school);
-    prefs.setString(USERPREF, username);
-    prefs.setString(PASSWORDPREF, password);
-
-    // Call the on connected method
-    onConnected();
+    throw ErrorDescription("Couldn't conenct to Untis");
   }
-  static void Ignore() {}
+  static void Ignore(UntisSession) {}
 
   static String GetServerURL(String url) {
     url = url.replaceAll("https://", ""); // Remove https://
