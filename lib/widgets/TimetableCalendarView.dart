@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
-import '../utils/CustomColors.dart';
 
 import '../utils/Timetable.dart';
 
@@ -42,6 +41,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     if (weeks == null || weeks!.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -65,203 +66,135 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     final numberOfSlots = (latestHour - earliestHour + 1).clamp(1, 24);
     final timeSlots = List.generate(numberOfSlots, (index) => earliestHour + index);
 
+    final pageWeek = weeks![0];
+
+    print(week.toString());
+
     return Row(
       children: [
         TimeScale(timeSlots),
-        for (final weekDay in weekdays)
-          Day(weekDay),
-      ],
-    );
-
-    return Column(
-      children: [
-        // Top bar
-        Container(
-          height: 40,
-          color: CustomColors.primary,
-          padding: EdgeInsets.only(left: 50),
-
-          // Week days
-          child: Container(
-            child: Row(
-              children: [
-                Container(),
-                  ...weekdays.map((day) => Expanded(
-                  child: Container(
-                    height: 40,
-                    alignment: Alignment.center,
-                    color: CustomColors.primary,
-                    child: Text(
-                      day,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        // Main timetable
         Expanded(
           child: Row(
-            children: [
-              // Time column
-              Container(
-                width: 50,
-                color: CustomColors.backgroundColor,
-                child: Column(
-                  children: timeSlots.map((hour) => Container(
-                    height: 60,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: Colors.grey.shade700),
-                      ),
-                    ),
-                    child: Text(
-                      '$hour:00',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                  )).toList(),
-                ),
-              ),
-              // Week view scrollable horizontally
-              Expanded(
-                child: PageView.builder(
-                  itemCount: weeks!.length,
-                  onPageChanged: (index) => setState(() => currentWeek = index),
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, pageIndex) {
-                    final pageWeek = weeks![pageIndex];
-
-                    return Row(
-                      children: pageWeek.map((day) {
-                        return Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            decoration: BoxDecoration(
-                              color: CustomColors.backgroundColor,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Stack(
-                              children: [
-                                // Background time slots for spacing
-                                Column(
-                                  children: timeSlots.map((_) => Container(height: 60)).toList(),
-                                ),
-                                // Periods
-                                ...day.map((period) {
-                                  if (period == null) return Container();
-
-                                  final startHour = period.startDateTime.hour;
-                                  final startMinute = period.startDateTime.minute;
-                                  final endHour = period.endDateTime.hour;
-                                  final endMinute = period.endDateTime.minute;
-
-                                  final startOffset = ((startHour + startMinute / 60) - earliestHour) * 60;
-                                  final height = ((endHour + endMinute / 60) - (startHour + startMinute / 60)) * 60;
-
-                                  return Positioned(
-                                    top: startOffset,
-                                    left: 4,
-                                    right: 4,
-                                    height: height,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: CustomColors.secondary,
-                                        borderRadius: BorderRadius.circular(6),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                            color: Colors.black26,
-                                            blurRadius: 2,
-                                            offset: Offset(1, 1),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            period.subject?.longName ?? "Unknown",
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            period.room?.name ?? "Unknown",
-                                            style: const TextStyle(
-                                                fontSize: 10, color: Colors.white70),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            period.teacher?.lastName ?? "Unknown",
-                                            style: const TextStyle(
-                                                fontSize: 10, color: Colors.white70),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-              ),
-            ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: weekdays.map((day) {
+              return Day(day, week, timeSlots, earliestHour);
+            }).toList(),
           ),
         ),
       ],
     );
   }
 
-  Widget Day(String day) {
-    return Expanded( // Try to use the full width.
+  Widget Day(String day, List<List<UntisPeriod?>> week, List<int> timeSlots, int earliestHour) {
+    final colors = Theme.of(context).colorScheme;
+
+    final dayIndex = weekdays.indexOf(day);
+    final dayPeriods = week[dayIndex];
+
+    return Expanded(
       child: Column(
         children: [
           // Top bar (day)
           Container(
             height: 40,
-            width: 100,
-            color: CustomColors.primary,
+            width: double.infinity,
+            color: colors.secondaryContainer,
             alignment: Alignment.center,
             child: Text(
               day,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14
+              style: TextStyle(
+                color: colors.onSecondaryContainer,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
 
-          // Small padding
-          SizedBox(
-            height: 4,
-          ),
+          const SizedBox(height: 4),
 
           // Periods
-          Column(
-            // Todo: Do the actual period display
+          Flexible(
+            child: SingleChildScrollView(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Stack(
+                  children: [
+                    // Background time slots for spacing
+                    Column(
+                      children: timeSlots.map((_) => Container(height: 60)).toList(),
+                    ),
+
+                    // Actual periods
+                    ...dayPeriods.map((period) {
+                      if (period == null) return const SizedBox.shrink();
+
+                      final startHour = period.startDateTime.hour;
+                      final startMinute = period.startDateTime.minute;
+                      final endHour = period.endDateTime.hour;
+                      final endMinute = period.endDateTime.minute;
+
+                      final startOffset = ((startHour + startMinute / 60) - earliestHour) * 60;
+                      final height = ((endHour + endMinute / 60) - (startHour + startMinute / 60)) * 60;
+
+                      return Positioned(
+                        top: startOffset,
+                        left: 0,
+                        right: 0,
+                        height: height,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: colors.primaryContainer,
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 2,
+                                offset: Offset(1, 1),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                period.subject?.longName ?? "Unknown",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.onPrimaryContainer,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                period.room?.name ?? "Unknown",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: colors.onPrimaryContainer.withOpacity(0.8)
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                period.teacher?.lastName ?? "Unknown",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: colors.onPrimaryContainer.withOpacity(0.8),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -269,6 +202,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
   }
 
   Widget TimeScale(List<int> timeSlots) {
+    final colors = Theme.of(context).colorScheme;
+
     return SizedBox(
       width: 50,
       child: Column(
@@ -276,7 +211,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
           // Top bar
           Container(
             height: 40,
-            color: CustomColors.primary,
+            color: colors.secondaryContainer,
           ),
 
           // Small padding
@@ -296,8 +231,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
               ),
               child: Text(
                 '$hour:00',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colors.onSurfaceVariant,
                   fontSize: 12,
                   decoration: TextDecoration.none,
                 ),
