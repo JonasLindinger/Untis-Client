@@ -1,7 +1,7 @@
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
 
 class Timetable {
-  static Future<void> GetTimetable(UntisSession session) async {
+  static Future<UntisTimetable> GetTimetable(UntisSession session) async {
     // Gets the timetable from the current date
     final UntisTimetable timetable = await session.getTimetable(
       endDate: DateTime.now().add(const Duration(days: 7))
@@ -14,8 +14,12 @@ class Timetable {
       print('Subject: ${period.subject?.longName}, Room: ${period.room?.name}, Teacher: ${period.teacher?.lastName}');
     }
 
-    final UntisTimeGrid timegrid = await
-    session.timeGrid;
+    return timetable;
+  }
+
+  static Future<List<List<UntisPeriod?>>> GetTimeGrid(UntisSession session) async {
+    final UntisTimetable timetable = await GetTimetable(session);
+    final UntisTimeGrid timegrid = await session.timeGrid;
 
     // Use Timetable and TimeGrid to group by day
     final List<List<UntisPeriod?>> days = timetable.groupedPeriods(timegrid);
@@ -30,5 +34,7 @@ class Timetable {
       final int minute = period.startDateTime.minute;
       print('Time: $hour:$minute Subject: ${period.subject}');
     }
+
+    return days;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:untis_client/utils/Timetable.dart';
+import 'package:flutter/material.dart';
+import '../utils/Timetable.dart';
+import '../widgets/TimetableCalendarView.dart';
 
 class TimetableScreen extends StatefulWidget {
   final UntisSession session;
@@ -20,7 +21,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
   @override
   void initState() {
     super.initState();
-
     session = widget.session;
 
     Timetable.GetTimetable(session);
@@ -28,6 +28,30 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Timetable'),
+        backgroundColor: Colors.teal[700],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TimetableCalendarView(session: session),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.teal[700],
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Week',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'List',
+          ),
+        ],
+      ),
+    );
   }
 }
