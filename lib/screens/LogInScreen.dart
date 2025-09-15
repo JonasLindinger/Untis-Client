@@ -146,7 +146,7 @@ class LogInScreen extends StatelessWidget {
   }
 
   void LoadHomeScreen(BuildContext context, UntisSession session) {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => TimetableScreen(
         session: session

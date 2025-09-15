@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
-import '../utils/Timetable.dart';
-import 'dart:ui';
+import '../utils/CustomColors.dart';
 
-class CustomColors {
-  static const Color backgroundColor = Color.fromRGBO(54, 54, 54, 1);
-  static const Color primary = Color.fromRGBO(50, 144, 143, 1);
-  static const Color secondary = Color.fromRGBO(230, 149, 151, 1);
-  static const Color highlight = Color.fromRGBO(249, 251, 242, 1);
-  static const Color other = Color.fromRGBO(215, 249, 255, 1);
-}
+import '../utils/Timetable.dart';
 
 class TimetableCalendarView extends StatefulWidget {
   final UntisSession session;

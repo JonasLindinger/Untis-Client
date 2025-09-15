@@ -1,5 +1,6 @@
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
 import 'package:flutter/material.dart';
+import 'package:untis_client/utils/CustomColors.dart';
 import '../utils/Timetable.dart';
 import '../widgets/TimetableCalendarView.dart';
 
@@ -30,25 +31,35 @@ class _TimetableScreenState extends State<TimetableScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Timetable'),
-        backgroundColor: Colors.teal[700],
+        centerTitle: true,
+        title: const Text(
+          "Timetable",
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        backgroundColor: CustomColors.backgroundColor,
+        foregroundColor: CustomColors.highlight,
       ),
-      body: Padding(
+      body: Container(
+        color: CustomColors.backgroundColor,
         padding: const EdgeInsets.all(8.0),
         child: TimetableCalendarView(session: session),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.teal[700],
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white70,
+        backgroundColor: CustomColors.backgroundColor,
+        selectedItemColor: CustomColors.primary,
+        unselectedItemColor: CustomColors.highlight,
+        currentIndex: 0,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
-            label: 'Week',
+            label: "Week",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'List',
+            icon: Icon(Icons.account_circle_rounded),
+            label: "List",
           ),
         ],
       ),
