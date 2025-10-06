@@ -29,6 +29,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
   late double scrollOffset;
   bool scrolled = false;
 
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +65,15 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
 
     final double pixelsPerMinute = hourHeight / 60;
     final int totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
+
+    late final Widget _timeLabels = _buildTimeLabels(
+      startHour,
+      startMinute,
+      endHour,
+      endMinute,
+      pixelsPerMinute,
+      colors,
+    );
 
     return NotificationListener<ScrollNotification>(
       onNotification: (scroll) {
@@ -163,14 +173,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                       top: -_verticalScroll + (scrolled ? scrollOffset : 0), // moves opposite to your WeekView scroll
                       left: 0,
                       right: 0,
-                      child: _buildTimeLabels(
-                        startHour,
-                        startMinute,
-                        endHour,
-                        endMinute,
-                        pixelsPerMinute,
-                        colors,
-                      ),
+                      child: _timeLabels,
                     ),
                   ],
                 ),
