@@ -87,7 +87,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                 color: Color.fromRGBO(0, 0, 0, 0) // Hide
               ),
               liveTimeIndicatorSettings: LiveTimeIndicatorSettings(
-                color: Colors.white,
+                color: colors.onSurface,
                 height: 2,
               ),
               timeLineBuilder: (_) => Container(),
@@ -100,13 +100,32 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                     color: isMarker ? Colors.transparent : Colors.blueAccent,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: isMarker
-                      ? null
-                      : Text(
-                    events.first.title ?? "No title",
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 12),
-                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        events.first.title ?? "No title",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1, // Limit to 1 line (or any number of lines)
+                        overflow: TextOverflow.ellipsis, // Adds "..." at the end if text overflows
+                      ),
+                      Text(
+                        events.first.description ?? "No title",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+
+                        ),
+                        maxLines: 1, // Limit to 1 line (or any number of lines)
+                        overflow: TextOverflow.ellipsis, // Adds "..." at the end if text overflows
+                      ),
+                    ],
+                  )
                 );
               },
               eventArranger: const SideEventArranger(),
@@ -136,7 +155,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
       _controller.removeWhere((event) => true);
       for (var period in timetable.periods) {
         _controller.add(CalendarEventData(
-          title: period.id.toString(),
+          title: period.subject == null ? period.teacher!.id.toString() : period.subject!.name,
+          description: period.rooms.isEmpty ? "" : period.rooms.first.name,
           date: DateTime(period.startDateTime.year,
               period.startDateTime.month, period.startDateTime.day),
           startTime: period.startDateTime,
