@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
     final lightScheme = baseLight.copyWith(
       primary: Colors.blueAccent,
       onPrimary: Colors.white,
-      secondary: Colors.orange.shade400,
+      secondary: Colors.red.shade500,
       onSecondary: Colors.black,
       surface: Colors.white,
       onSurface: Colors.grey.shade900,
@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
       primary: Colors.blueAccent,
       onPrimary: Colors.black,
-      secondary: Colors.teal.shade600,
+      secondary: Colors.red.shade900,
       onSecondary: Colors.black,
       surface: Color(0xFF111111),
       onSurface: Colors.grey.shade100,

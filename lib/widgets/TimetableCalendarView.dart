@@ -111,12 +111,26 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
               ),
               timeLineBuilder: (_) => Container(),
               eventTileBuilder: (date, events, boundary, start, end) {
-                final isMarker = events.first.title == _markerTitle;
+                final colors = Theme.of(context).colorScheme;
+
+                var event = events.first;
+                UntisPeriod period = event.event as UntisPeriod;
+
+                bool isPlannedRoom = false;
+                try {
+                  if (period.planRooms.first == period.room) {
+                    isPlannedRoom = true;
+                  }
+                }
+                catch (e, st) {
+                  // No room found probably
+                }
+
                 return Container(
                   margin: const EdgeInsets.all(2),
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: isMarker ? Colors.transparent : colors.primary,
+                    color: isPlannedRoom ? colors.primary : colors.secondary,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -254,7 +268,16 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
 
     UntisPeriod period = event.event as UntisPeriod;
 
-    bool isPlannedRoom = period.planRooms.first == period.room;
+    bool isPlannedRoom = false;
+    bool hasRoom = period.planRooms.isNotEmpty;
+    try {
+      if (period.planRooms.first == period.room) {
+        isPlannedRoom = true;
+      }
+    }
+    catch (e, st) {
+      // No room found probably
+    }
 
     showDialog(
       context: context,
@@ -289,13 +312,17 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                       ),
                       children: [
                         TextSpan(
-                          text: isPlannedRoom ? period.planRooms.first.name : period.room!.name,
+                          text: hasRoom ? isPlannedRoom ? period.planRooms.first.name : period.room!.name : "?",
                           style: TextStyle(
-                            decoration: isPlannedRoom ? TextDecoration.none : TextDecoration.lineThrough,
+                            decoration: hasRoom && !isPlannedRoom ? TextDecoration.lineThrough : TextDecoration.none,
+                            color: colors.onPrimary,
                           ),
                         ),
                         TextSpan(
-                          text: isPlannedRoom ? "" : " -> " + period.planRooms.first.name,
+                          text: hasRoom && !isPlannedRoom ? " -> " + period.planRooms.first.name : "",
+                          style: TextStyle(
+                            color: colors.onPrimary,
+                          ),
                         ),
                       ],
                     )
