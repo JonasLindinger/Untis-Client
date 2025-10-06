@@ -139,7 +139,6 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
-
                         ),
                         maxLines: 1, // Limit to 1 line (or any number of lines)
                         overflow: TextOverflow.ellipsis, // Adds "..." at the end if text overflows
@@ -148,9 +147,15 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                   )
                 );
               },
+              onPageChange: (date, i) {
+                setState(() {
+                  _verticalScroll = 0;
+                  scrolled = false;
+                });
+              },
               eventArranger: const SideEventArranger(),
               weekPageHeaderBuilder: WeekHeader.hidden,
-              keepScrollOffset: true,
+              keepScrollOffset: false,
               showVerticalLines: false,
               showHalfHours: false,
               showQuarterHours: false,
@@ -169,7 +174,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                 child: Stack(
                   children: [
                     // Movable timestamp column
-                    Positioned(
+                    AnimatedPositioned(
+                      duration: _verticalScroll == 0 ? Duration(milliseconds: 250) : Duration(microseconds: 0),
                       top: -_verticalScroll + (scrolled ? scrollOffset : 0), // moves opposite to your WeekView scroll
                       left: 0,
                       right: 0,
