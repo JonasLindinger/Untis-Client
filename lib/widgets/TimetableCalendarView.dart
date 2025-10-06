@@ -28,7 +28,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
   late int earliestMinute;
   late double scrollOffset;
   bool scrolled = false;
-
+  int page = 0;
 
   @override
   void initState() {
@@ -148,10 +148,13 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                 );
               },
               onPageChange: (date, i) {
-                setState(() {
-                  _verticalScroll = 0;
-                  scrolled = false;
-                });
+                if (page != i) { // Check if page changed
+                  setState(() {
+                    _verticalScroll = 0;
+                    scrolled = false;
+                    page = i;
+                  });
+                }
               },
               eventArranger: const SideEventArranger(),
               weekPageHeaderBuilder: WeekHeader.hidden,
