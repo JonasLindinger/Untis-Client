@@ -55,6 +55,16 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     int offsetMinutes = earliestMinute;
     scrollOffset = (offsetHour * 60 + offsetMinutes) * heightPerMinute;
 
+    const int startHour = 7;
+    const int startMinute = 55;
+    const int endHour = 18;
+    const int endMinute = 0;
+    const double hourHeight = 60*1.5; // height per hour in pixels
+    const double headerHeight = 51.0; // adjust to your week view's header
+
+    final double pixelsPerMinute = hourHeight / 60;
+    final int totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
+
     return NotificationListener<ScrollNotification>(
       onNotification: (scroll) {
         if (scroll.metrics.axis == Axis.vertical) {
@@ -135,10 +145,93 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
               showHalfHours: false,
               showQuarterHours: false,
             ),
-            buildTimeScale(),
+            Container(
+              width: 55,
+              margin: EdgeInsets.only(top: headerHeight),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [colors.surface, colors.surface],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: ClipRect(
+                child: Stack(
+                  children: [
+                    // Movable timestamp column
+                    Positioned(
+                      top: -_verticalScroll + (scrolled ? scrollOffset : 0), // moves opposite to your WeekView scroll
+                      left: 0,
+                      right: 0,
+                      child: _buildTimeLabels(
+                        startHour,
+                        startMinute,
+                        endHour,
+                        endMinute,
+                        pixelsPerMinute,
+                        colors,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTimeLabels(
+      int startHour,
+      int startMinute,
+      int endHour,
+      int endMinute,
+      double pixelsPerMinute,
+      ColorScheme colors,
+      ) {
+    List<Widget> labels = [];
+
+    final totalMinutes =
+        (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+
+    for (int hour = startHour; hour <= endHour; hour++) {
+      for (int minute = 0; minute < 60; minute += 5) {
+        // Only render if inside range
+        final total = hour * 60 + minute;
+        if (total < startHour * 60 + startMinute ||
+            total > endHour * 60 + endMinute) continue;
+
+        if (_eventStartsOrEndsAt(hour, minute)) {
+          // Align to the absolute minute distance from the *exact start point*
+          final offsetMinutes = (total - (startHour * 60 + startMinute));
+          final top = offsetMinutes * pixelsPerMinute;
+
+          labels.add(
+            Positioned(
+              top: top,
+              left: 8,
+              right: 0,
+              child: Text(
+                '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colors.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    // Total height in pixels (perfectly aligned to WeekView)
+    final totalHeight = totalMinutes * pixelsPerMinute;
+
+    return SizedBox(
+      height: totalHeight,
+      child: Stack(children: labels),
     );
   }
 
@@ -185,67 +278,6 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     } catch (e, st) {
       debugPrint("Failed to load timetable: $e\n$st");
     }
-  }
-
-  Widget buildTimeScale() {
-    final colors = Theme.of(context).colorScheme;
-
-    const int startHour = 7;
-    const int startMinute = 55;
-    const int endHour = 18;
-    const int endMinute = 0;
-    const double hourHeight = 60*1.5; // height per hour in pixels
-    const double headerHeight = 51.0; // adjust to your week view's header
-
-    final double pixelsPerMinute = hourHeight / 60;
-    final int totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
-
-    return SizedBox(
-      width: 55,
-      height: totalMinutes * pixelsPerMinute + headerHeight,
-      child: ClipRect(
-        child: Container(
-          margin: EdgeInsets.only(top: headerHeight),
-          width: 55,
-          height: totalMinutes * pixelsPerMinute + headerHeight,
-          color: colors.surface,
-          child: Stack(
-            children: [
-              for (int hour = startHour; hour <= endHour; hour++)
-                for (int minute = 0; minute < 60; minute += 5)
-                  if (_eventStartsOrEndsAt(hour, minute))
-                    Positioned(
-                      top: GetTop(0, hour, minute, startHour, startMinute, pixelsPerMinute),
-                      left: 8,
-                      right: 0,
-                      child: Text(
-                        GetTop(0, hour, minute, startHour, startMinute, pixelsPerMinute) < 0 ? "" :
-                          '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colors.onSurface,
-                            fontWeight: FontWeight.bold,
-                          ),
-                      ),
-                    ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  double GetTop(double headerHeight, int hour, int minute, int startHour, int startMinute, double pixelsPerMinute) {
-    return headerHeight +
-        ((hour * 60 + minute) - (startHour * 60 + startMinute)) *
-            pixelsPerMinute -
-        _verticalScroll +
-        (scrolled ? scrollOffset : 0);
-  }
-
-  double getTopForTime(int hour, int minute) {
-    const double rowHeight = 60; // 1 hour = 60 pixels in week view
-    return hour * rowHeight + (minute / 60) * rowHeight;
   }
 
   bool _eventStartsOrEndsAt(int hour, int minute) {
