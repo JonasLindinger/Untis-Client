@@ -26,6 +26,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
   late UntisPeriod _earliestPeriod;
   late int earliestHour;
   late int earliestMinute;
+  late double scrollOffset;
+  bool scrolled = false;
 
   @override
   void initState() {
@@ -51,12 +53,13 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
 
     int offsetHour = 0;
     int offsetMinutes = earliestMinute;
-    double scrollOffset = (offsetHour * 60 + offsetMinutes) * heightPerMinute;
+    scrollOffset = (offsetHour * 60 + offsetMinutes) * heightPerMinute;
 
     return NotificationListener<ScrollNotification>(
       onNotification: (scroll) {
         if (scroll.metrics.axis == Axis.vertical) {
           setState(() => _verticalScroll = scroll.metrics.pixels);
+          scrolled = true;
         }
         return false;
       },
@@ -80,6 +83,13 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                 WeekDays.thursday,
                 WeekDays.friday,
               ],
+              hourIndicatorSettings: HourIndicatorSettings(
+                color: Color.fromRGBO(0, 0, 0, 0) // Hide
+              ),
+              liveTimeIndicatorSettings: LiveTimeIndicatorSettings(
+                color: Colors.white,
+                height: 2,
+              ),
               timeLineBuilder: (_) => Container(),
               eventTileBuilder: (date, events, boundary, start, end) {
                 final isMarker = events.first.title == _markerTitle;
@@ -102,6 +112,9 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
               eventArranger: const SideEventArranger(),
               weekPageHeaderBuilder: WeekHeader.hidden,
               keepScrollOffset: true,
+              showVerticalLines: false,
+              showHalfHours: false,
+              showQuarterHours: false,
             ),
             buildTimeScale(),
           ],
@@ -159,32 +172,50 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     const int startMinute = 55;
     const int endHour = 18;
     const int endMinute = 0;
-    const double hourHeight = 60.0; // height per hour in pixels
+    const double hourHeight = 60*1.5; // height per hour in pixels
     const double headerHeight = 50.0; // adjust to your week view's header
 
-    final double pixelsPerMinute = hourHeight / 60.0;
+    final double pixelsPerMinute = hourHeight / 60;
     final int totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
 
     return SizedBox(
       width: 60,
       height: totalMinutes * pixelsPerMinute + headerHeight,
-      child: Stack(
-        children: [
-          for (int hour = startHour; hour <= endHour; hour++)
-            for (int minute = 0; minute < 60; minute += 5)
-              if (_eventStartsOrEndsAt(hour, minute))
-                Positioned(
-                  top: headerHeight + ((hour - startHour) * 60 + (minute - startMinute)) * pixelsPerMinute - _verticalScroll,
-                  left: 0,
-                  right: 0,
-                  child: Text(
-                    '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-        ],
+      child: ClipRect(
+        child: SizedBox(
+          width: 60,
+          height: totalMinutes * pixelsPerMinute + headerHeight,
+          child: Stack(
+            children: [
+              for (int hour = startHour; hour <= endHour; hour++)
+                for (int minute = 0; minute < 60; minute += 5)
+                  if (_eventStartsOrEndsAt(hour, minute))
+                    Positioned(
+                      top: max(
+                        headerHeight, // never go above the header
+                        GetTop(headerHeight, hour, minute, startHour, startMinute, pixelsPerMinute),
+                      ),
+                      left: 0,
+                      right: 0,
+                      child: Text(
+                        GetTop(headerHeight, hour, minute, startHour, startMinute, pixelsPerMinute) < headerHeight ? "" :
+                          '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+                          style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  double GetTop(double headerHeight, int hour, int minute, int startHour, int startMinute, double pixelsPerMinute) {
+    return headerHeight +
+        ((hour * 60 + minute) - (startHour * 60 + startMinute)) *
+            pixelsPerMinute -
+        _verticalScroll +
+        (scrolled ? scrollOffset : 0);
   }
 
   double getTopForTime(int hour, int minute) {
