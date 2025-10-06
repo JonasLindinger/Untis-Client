@@ -300,23 +300,6 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                       ],
                     )
                   ),
-                  /*
-                  for (var room in period.rooms)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 10),
-                        Text(
-                          "Room: " + room.name,
-                          textAlign: TextAlign.left,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: colors.onPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    */
                   Expanded(child: Container()),
                   ElevatedButton(
                     onPressed: () {
