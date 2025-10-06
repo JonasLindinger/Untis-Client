@@ -254,6 +254,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
 
     UntisPeriod period = event.event as UntisPeriod;
 
+    bool isPlannedRoom = period.planRooms.first == period.room;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -278,14 +280,43 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  Text(
-                    "Room: " + period.room!.name,
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: colors.onPrimary,
-                    ),
+                  Text.rich(
+                    TextSpan(
+                      text: "Room: ",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colors.onPrimary,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: isPlannedRoom ? period.planRooms.first.name : period.room!.name,
+                          style: TextStyle(
+                            decoration: isPlannedRoom ? TextDecoration.none : TextDecoration.lineThrough,
+                          ),
+                        ),
+                        TextSpan(
+                          text: isPlannedRoom ? "" : " -> " + period.planRooms.first.name,
+                        ),
+                      ],
+                    )
                   ),
+                  /*
+                  for (var room in period.rooms)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 10),
+                        Text(
+                          "Room: " + room.name,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: colors.onPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    */
                   Expanded(child: Container()),
                   ElevatedButton(
                     onPressed: () {
