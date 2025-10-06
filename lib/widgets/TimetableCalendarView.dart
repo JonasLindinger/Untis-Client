@@ -115,7 +115,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                         overflow: TextOverflow.ellipsis, // Adds "..." at the end if text overflows
                       ),
                       Text(
-                        events.first.description ?? "No title",
+                        events.first.description ?? "/",
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -188,6 +188,8 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
   }
 
   Widget buildTimeScale() {
+    final colors = Theme.of(context).colorScheme;
+
     const int startHour = 7;
     const int startMinute = 55;
     const int endHour = 18;
@@ -215,12 +217,16 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                         headerHeight, // never go above the header
                         GetTop(headerHeight, hour, minute, startHour, startMinute, pixelsPerMinute),
                       ),
-                      left: 0,
+                      left: 8,
                       right: 0,
                       child: Text(
                         GetTop(headerHeight, hour, minute, startHour, startMinute, pixelsPerMinute) < headerHeight ? "" :
                           '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.onSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
                       ),
                     ),
             ],
