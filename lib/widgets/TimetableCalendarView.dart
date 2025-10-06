@@ -195,32 +195,31 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     const int endHour = 18;
     const int endMinute = 0;
     const double hourHeight = 60*1.5; // height per hour in pixels
-    const double headerHeight = 50.0; // adjust to your week view's header
+    const double headerHeight = 51.0; // adjust to your week view's header
 
     final double pixelsPerMinute = hourHeight / 60;
     final int totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
 
     return SizedBox(
-      width: 60,
+      width: 55,
       height: totalMinutes * pixelsPerMinute + headerHeight,
       child: ClipRect(
-        child: SizedBox(
-          width: 60,
+        child: Container(
+          margin: EdgeInsets.only(top: headerHeight),
+          width: 55,
           height: totalMinutes * pixelsPerMinute + headerHeight,
+          color: colors.surface,
           child: Stack(
             children: [
               for (int hour = startHour; hour <= endHour; hour++)
                 for (int minute = 0; minute < 60; minute += 5)
                   if (_eventStartsOrEndsAt(hour, minute))
                     Positioned(
-                      top: max(
-                        headerHeight, // never go above the header
-                        GetTop(headerHeight, hour, minute, startHour, startMinute, pixelsPerMinute),
-                      ),
+                      top: GetTop(0, hour, minute, startHour, startMinute, pixelsPerMinute),
                       left: 8,
                       right: 0,
                       child: Text(
-                        GetTop(headerHeight, hour, minute, startHour, startMinute, pixelsPerMinute) < headerHeight ? "" :
+                        GetTop(0, hour, minute, startHour, startMinute, pixelsPerMinute) < 0 ? "" :
                           '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
                           style: TextStyle(
                             fontSize: 12,
