@@ -19,7 +19,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
   void initState() {
     super.initState();
     session = widget.session;
-    Timetable.GetTimetable(session);
   }
 
   @override

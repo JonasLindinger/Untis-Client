@@ -1,10 +1,11 @@
+import 'dart:math';
+import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
 
-import '../utils/Timetable.dart';
-
 class TimetableCalendarView extends StatefulWidget {
   final UntisSession session;
+
   const TimetableCalendarView({super.key, required this.session});
 
   @override
@@ -12,237 +13,197 @@ class TimetableCalendarView extends StatefulWidget {
 }
 
 class _TimetableCalendarViewState extends State<TimetableCalendarView> {
-  final double hourHeight = 90; // was 60, increase to make periods longer
-  List<List<List<UntisPeriod?>>>? weeks; // weeks -> days -> periods
-  int currentWeek = 0;
+  final EventController _controller = EventController();
+  late UntisTimetable timetable;
+  late List<UntisYear> years;
+  late UntisTimeGrid timeGrid;
 
-  final List<String> weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  bool initialized = false;
+
+  double _verticalScroll = 0.0;
+  final GlobalKey _weekViewKey = GlobalKey();
+  final String _markerTitle = '____marker____';
+  late UntisPeriod _earliestPeriod;
+  late int earliestHour;
+  late int earliestMinute;
 
   @override
   void initState() {
     super.initState();
-    LoadTimetable();
-  }
-
-  Future<void> LoadTimetable() async {
-    final result = await Timetable.GetTimeGrid(widget.session);
-
-    if (result.isEmpty) return;
-
-    // Split into weeks of 5 days (Mon-Fri)
-    List<List<List<UntisPeriod?>>> tempWeeks = [];
-    for (int i = 0; i < result.length; i += 5) {
-      tempWeeks.add(result.skip(i).take(5).toList());
-    }
-
-    setState(() {
-      weeks = tempWeeks;
-    });
+    _loadWeekData(DateTime.now());
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    if (!initialized) return const Center(child: CircularProgressIndicator());
 
-    if (weeks == null || weeks!.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final earliestPeriod = timetable.periods.reduce(
+            (a, b) => a.startDateTime.isBefore(b.startDateTime) ? a : b);
+    final latestPeriod = timetable.periods.reduce(
+            (a, b) => a.endDateTime.isAfter(b.endDateTime) ? a : b);
 
-    final week = weeks![currentWeek];
+    earliestHour = earliestPeriod.startDateTime.hour;
+    earliestMinute = earliestPeriod.startDateTime.minute;
+    final latestHour = max(latestPeriod.endDateTime.hour, 18);
 
-    // Determine earliest and latest periods for time column
-    int earliestHour = 23;
-    int latestHour = 0;
-    for (var day in week) {
-      for (var period in day) {
-        if (period == null) continue;
-        final start = period.startDateTime.hour;
-        final end = period.endDateTime.hour;
-        if (start < earliestHour) earliestHour = start;
-        if (end > latestHour) latestHour = end;
-      }
-    }
+    double heightPerMinute = 1.5;
 
-    if (latestHour < earliestHour) latestHour = earliestHour + 1;
-    final numberOfSlots = (latestHour - earliestHour + 1).clamp(1, 24);
-    final timeSlots = List.generate(numberOfSlots, (index) => earliestHour + index);
+    int offsetHour = 0;
+    int offsetMinutes = earliestMinute;
+    double scrollOffset = (offsetHour * 60 + offsetMinutes) * heightPerMinute;
 
-    return ListView(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scroll) {
+        if (scroll.metrics.axis == Axis.vertical) {
+          setState(() => _verticalScroll = scroll.metrics.pixels);
+        }
+        return false;
+      },
+      child: CalendarControllerProvider(
+        controller: _controller,
+        child: Stack(
           children: [
-            // Time scale scrolls together
-            TimeScale(timeSlots),
-
-            // Days
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: weekdays.map((day) {
-                  return Day(day, week, timeSlots, earliestHour);
-                }).toList(),
-              ),
+            WeekView(
+              key: _weekViewKey,
+              controller: _controller,
+              backgroundColor: colors.background,
+              scrollOffset: scrollOffset,
+              startHour: earliestHour,
+              endHour: latestHour + 1,
+              heightPerMinute: heightPerMinute,
+              showLiveTimeLineInAllDays: true,
+              weekDays: const [
+                WeekDays.monday,
+                WeekDays.tuesday,
+                WeekDays.wednesday,
+                WeekDays.thursday,
+                WeekDays.friday,
+              ],
+              timeLineBuilder: (_) => Container(),
+              eventTileBuilder: (date, events, boundary, start, end) {
+                final isMarker = events.first.title == _markerTitle;
+                return Container(
+                  margin: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: isMarker ? Colors.transparent : Colors.blueAccent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: isMarker
+                      ? null
+                      : Text(
+                    events.first.title ?? "No title",
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 12),
+                  ),
+                );
+              },
+              eventArranger: const SideEventArranger(),
+              weekPageHeaderBuilder: WeekHeader.hidden,
+              keepScrollOffset: true,
             ),
+            buildTimeScale(),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget Day(String day, List<List<UntisPeriod?>> week, List<int> timeSlots, int earliestHour) {
-    final colors = Theme.of(context).colorScheme;
-
-    final dayIndex = weekdays.indexOf(day);
-    final dayPeriods = week[dayIndex];
-
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            height: 30,
-            width: double.infinity,
-            color: colors.secondaryContainer,
-            alignment: Alignment.center,
-            child: Text(
-              day,
-              style: TextStyle(
-                color: colors.onSecondaryContainer,
-                fontWeight: FontWeight.bold,
-                fontSize: 12, // smaller
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          const SizedBox(height: 2), // smaller gap
-
-          // Periods
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 1),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: Stack(
-              children: [
-                // Background time slots for spacing
-                Column(
-                  children: timeSlots.map((_) => Container(height: hourHeight)).toList(),
-                ),
-
-                // Actual periods
-                ...dayPeriods.map((period) {
-                  if (period == null) return const SizedBox.shrink();
-
-                  final startHour = period.startDateTime.hour;
-                  final startMinute = period.startDateTime.minute;
-                  final endHour = period.endDateTime.hour;
-                  final endMinute = period.endDateTime.minute;
-
-                  final startOffset = ((startHour + startMinute / 60) - earliestHour) * hourHeight;
-                  final height = ((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourHeight;
-
-                  return Positioned(
-                    top: startOffset,
-                    left: 2, // small padding from edges
-                    right: 2,
-                    height: height,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: colors.primaryContainer,
-                        borderRadius: BorderRadius.circular(6),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 2,
-                            offset: Offset(1, 1),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            period.subject?.longName ?? "Unknown",
-                            style: TextStyle(
-                              fontSize: 11, // slightly smaller
-                              fontWeight: FontWeight.bold,
-                              color: colors.onPrimaryContainer,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            period.room?.name ?? "Unknown",
-                            style: TextStyle(
-                              fontSize: 9,
-                              color: colors.onPrimaryContainer.withOpacity(0.8),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            period.teacher?.lastName ?? "Unknown",
-                            style: TextStyle(
-                              fontSize: 9,
-                              color: colors.onPrimaryContainer.withOpacity(0.8),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Widget TimeScale(List<int> timeSlots) {
-    final colors = Theme.of(context).colorScheme;
+  Future<void> _loadWeekData(DateTime date) async {
+    try {
+      timeGrid = await widget.session.timeGrid;
+      years = await widget.session.schoolYears;
+
+      timetable = await widget.session.getTimetable(
+        startDate: years.last.startDate,
+        endDate: years.last.endDate,
+      );
+
+      _controller.removeWhere((event) => true);
+      for (var period in timetable.periods) {
+        _controller.add(CalendarEventData(
+          title: period.id.toString(),
+          date: DateTime(period.startDateTime.year,
+              period.startDateTime.month, period.startDateTime.day),
+          startTime: period.startDateTime,
+          endTime: period.endDateTime,
+        ));
+      }
+
+      _earliestPeriod = timetable.periods.reduce(
+              (a, b) => a.startDateTime.isBefore(b.startDateTime) ? a : b);
+
+      // add invisible marker
+      _controller.add(CalendarEventData(
+        title: _markerTitle,
+        date: DateTime(
+          _earliestPeriod.startDateTime.year,
+          _earliestPeriod.startDateTime.month,
+          _earliestPeriod.startDateTime.day,
+        ),
+        startTime: _earliestPeriod.startDateTime,
+        endTime: _earliestPeriod.startDateTime.add(const Duration(minutes: 1)),
+      ));
+
+      setState(() {
+        initialized = true;
+      });
+    } catch (e, st) {
+      debugPrint("Failed to load timetable: $e\n$st");
+    }
+  }
+
+  Widget buildTimeScale() {
+    const int startHour = 7;
+    const int startMinute = 55;
+    const int endHour = 18;
+    const int endMinute = 0;
+    const double hourHeight = 60.0; // height per hour in pixels
+    const double headerHeight = 50.0; // adjust to your week view's header
+
+    final double pixelsPerMinute = hourHeight / 60.0;
+    final int totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
 
     return SizedBox(
-      width: 50,
-      child: Column(
+      width: 60,
+      height: totalMinutes * pixelsPerMinute + headerHeight,
+      child: Stack(
         children: [
-          // Top bar
-          Container(
-            height: 30,
-            color: colors.secondaryContainer,
-          ),
-
-          // Small padding
-          SizedBox(
-            height: 4,
-          ),
-
-          // Times
-          Column(
-            children: timeSlots.map((hour) => Container(
-              height: hourHeight,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade700),
+          for (int hour = startHour; hour <= endHour; hour++)
+            for (int minute = 0; minute < 60; minute += 5)
+              if (_eventStartsOrEndsAt(hour, minute))
+                Positioned(
+                  top: headerHeight + ((hour - startHour) * 60 + (minute - startMinute)) * pixelsPerMinute - _verticalScroll,
+                  left: 0,
+                  right: 0,
+                  child: Text(
+                    '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
-              ),
-              child: Text(
-                '$hour:00',
-                style: TextStyle(
-                  color: colors.onSurfaceVariant,
-                  fontSize: 12,
-                  decoration: TextDecoration.none,
-                ),
-              ),
-            )).toList(),
-          ),
         ],
       ),
     );
+  }
+
+  double getTopForTime(int hour, int minute) {
+    const double rowHeight = 60; // 1 hour = 60 pixels in week view
+    return hour * rowHeight + (minute / 60) * rowHeight;
+  }
+
+  bool _eventStartsOrEndsAt(int hour, int minute) {
+    for (var ev in _controller.events) {
+      final st = ev.startTime;
+      final en = ev.endTime;
+
+      if (st != null && st.hour == hour && st.minute == minute) {
+        return true;
+      }
+      if (en != null && en.hour == hour && en.minute == minute) {
+        return true;
+      }
+    }
+    return false;
   }
 }

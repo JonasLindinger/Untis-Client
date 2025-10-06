@@ -11,7 +11,6 @@ class Timetable {
 
     // Use the timetable data
     for (final UntisPeriod period in timetable.periods) {
-      print('Subject: ${period.subject?.longName}, Room: ${period.room?.name}, Teacher: ${period.teacher?.lastName}');
     }
 
     return timetable;
@@ -32,7 +31,6 @@ class Timetable {
       }
       final int hour = period.startDateTime.hour;
       final int minute = period.startDateTime.minute;
-      print('Time: $hour:$minute Subject: ${period.subject}');
     }
 
     return days;
