@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
 
     // Modern light scheme
     final lightScheme = baseLight.copyWith(
-      primary: Colors.deepPurple.shade600,
+      primary: Colors.blueAccent,
       onPrimary: Colors.white,
       secondary: Colors.orange.shade400,
       onSecondary: Colors.black,
@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
     // Modern dark scheme
     final darkScheme = ColorScheme(
       brightness: Brightness.dark,
-      primary: Colors.deepPurple.shade200,
+      primary: Colors.blueAccent,
       onPrimary: Colors.black,
       secondary: Colors.teal.shade600,
       onSecondary: Colors.black,

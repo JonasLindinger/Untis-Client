@@ -64,7 +64,6 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     const double headerHeight = 51.0; // adjust to your week view's header
 
     final double pixelsPerMinute = hourHeight / 60;
-    final int totalMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
 
     late final Widget _timeLabels = _buildTimeLabels(
       startHour,
@@ -117,7 +116,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                   margin: const EdgeInsets.all(2),
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: isMarker ? Colors.transparent : Colors.blueAccent,
+                    color: isMarker ? Colors.transparent : colors.primary,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -156,7 +155,10 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                   });
                 }
               },
-              eventArranger: const SideEventArranger(),
+              onEventTap: (events, date) {
+                showEventPopup(context, events.first, date);
+              },
+              eventArranger: SideEventArranger(),
               weekPageHeaderBuilder: WeekHeader.hidden,
               keepScrollOffset: false,
               showVerticalLines: false,
@@ -247,6 +249,59 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     );
   }
 
+  void showEventPopup(BuildContext context, CalendarEventData event, DateTime time) {
+    final colors = Theme.of(context).colorScheme;
+
+    UntisPeriod period = event.event as UntisPeriod;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              color: colors.primary,
+              padding: EdgeInsets.all(16),
+              width: 500,
+              height: 600,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    period.subject!.longName + " (" + period.subject!.name + ")", // Physics (PH)
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: colors.onPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Room: " + period.room!.name,
+                    textAlign: TextAlign.left,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colors.onPrimary,
+                    ),
+                  ),
+                  Expanded(child: Container()),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the popup
+                    },
+                    child: Text('Close'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _loadWeekData(DateTime date) async {
     try {
       timeGrid = await widget.session.timeGrid;
@@ -262,6 +317,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
         _controller.add(CalendarEventData(
           title: period.subject == null ? period.teacher!.id.toString() : period.subject!.name,
           description: period.rooms.isEmpty ? "" : period.rooms.first.name,
+          event: period,
           date: DateTime(period.startDateTime.year,
               period.startDateTime.month, period.startDateTime.day),
           startTime: period.startDateTime,
