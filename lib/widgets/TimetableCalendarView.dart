@@ -182,13 +182,6 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
             Container(
               width: 55,
               margin: EdgeInsets.only(top: headerHeight),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [colors.surface, colors.surface],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
               child: ClipRect(
                 child: Stack(
                   children: [
