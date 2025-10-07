@@ -283,7 +283,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     }
 
     // Get all events that start at the same time.
-    List<UntisPeriod> events = _controller.allEvents
+    List<UntisPeriod> periods = _controller.allEvents
         .where((e) => e.startTime == event.startTime)
         .map((e) => e.event as UntisPeriod)
         .toList();
@@ -296,34 +296,79 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
             borderRadius: BorderRadius.circular(20),
             child: Container(
               color: colors.primary,
-              padding: EdgeInsets.all(16),
               width: 500,
               height: 600,
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      for (var currentEvent in events)
-                        Expanded(
-                          child: GestureDetector(
-                            child: Container(
-                              padding: EdgeInsets.all(4),
-                              color: colors.secondary,
-                              child: Center(
-                                child: Text(
-                                  currentEvent.subject!.name,
-                                ),
-                              )
-                            ),
-                            onTap: () {
+                  SizedBox(
+                    height: 50,
+                    child: Row(
+                      children: [
+                        for (var currentPeriod in periods)
+                          Expanded(
+                            child: GestureDetector(
+                              child: Column(
+                                children: [
+                                  Container(
+                                    height: 47,
+                                    color: colors.primary,
+                                    child: Center(
+                                      child: Text(
+                                        currentPeriod.subject != null ? currentPeriod.subject!.name : "?", // PH, M or E
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    )
+                                  ),
+                                  Container(
+                                    height: 3,
+                                    color: period == currentPeriod ? colors.secondary: colors.primary,
+                                  )
+                                ],
+                              ),
+                              onTap: () {
+                                if (period != currentPeriod) {
+                                  // Close this window and display the other period
+                                  Navigator.of(context).pop(); // Close the popup
 
-                            },
+                                  CalendarEventData event = _controller.allEvents
+                                      .firstWhere((e) => e.event is UntisPeriod && e.event == currentPeriod);
+                                  showEventPopup(context, event, date);
+                                }
+                              },
+                            ),
                           ),
-                        )
-                    ],
+
+                      ],
+                    ),
                   ),
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.all(20),
+                      child: Container(
+                        color: Colors.red,
+                        child: Column(
+                          children: [
+                            Expanded(child: Container()),
+                            SizedBox(
+                              width: 200,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(); // Close the popup
+                                },
+                                child: Text('Close'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    )
+                  ),
+                  /*
                   Text(
                     period.subject!.longName + " (" + period.subject!.name + ")", // Physics (PH)
                     style: TextStyle(
@@ -364,6 +409,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                     },
                     child: Text('Close'),
                   ),
+                  */
                 ],
               ),
             ),
