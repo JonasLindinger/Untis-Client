@@ -317,9 +317,10 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                                     child: Center(
                                       child: Text(
                                         currentPeriod.subject != null ? currentPeriod.subject!.name : "?", // PH, M or E
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     )
@@ -342,27 +343,42 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                               },
                             ),
                           ),
-
                       ],
                     ),
                   ),
                   Expanded(
                     child: Container(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.only(top: 5, left: 15, right: 15, bottom: 20),
                       child: Container(
-                        color: Colors.red,
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: Container()),
-                            SizedBox(
-                              width: 200,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop(); // Close the popup
-                                },
-                                child: Text('Close'),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Text(
+                                    period.subject!.longName, // + " (" + period.subject!.name + ")", // Physics (PH)
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
+                            Center(
+                              child: SizedBox(
+                                width: 200,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close the popup
+                                  },
+                                  child: Text('Close'),
+                                ),
+                              ),
+                            )
                           ],
                         ),
                       )
