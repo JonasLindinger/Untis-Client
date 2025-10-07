@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:calendar_view/calendar_view.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dart_untis_mobile/dart_untis_mobile.dart';
 
@@ -116,10 +117,19 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                 var event = events.first;
                 UntisPeriod period = event.event as UntisPeriod;
 
-                bool isPlannedRoom = false;
+                bool isPlanned = true;
                 try {
-                  if (period.planRooms.first == period.room) {
-                    isPlannedRoom = true;
+                  if (!listEquals(period.planTeachers, period.teachers)) {
+                    isPlanned = false;
+                  }
+                  else if (!listEquals(period.planRooms, period.rooms)) {
+                    isPlanned = false;
+                  }
+                  else if (!listEquals(period.planClasses, period.classes)) {
+                    isPlanned = false;
+                  }
+                  else if (!listEquals(period.planSubjects, period.subjects)) {
+                    isPlanned = false;
                   }
                 }
                 catch (e, st) {
@@ -130,7 +140,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                   margin: const EdgeInsets.all(2),
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: isPlannedRoom ? colors.primary : colors.secondary,
+                    color: isPlanned ? colors.primary : colors.secondary,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -256,7 +266,7 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     );
   }
 
-  void showEventPopup(BuildContext context, CalendarEventData event, DateTime time) {
+  void showEventPopup(BuildContext context, CalendarEventData event, DateTime date) {
     final colors = Theme.of(context).colorScheme;
 
     UntisPeriod period = event.event as UntisPeriod;
@@ -271,6 +281,12 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
     catch (e, st) {
       // No room found probably
     }
+
+    // Get all events that start at the same time.
+    List<UntisPeriod> events = _controller.allEvents
+        .where((e) => e.startTime == event.startTime)
+        .map((e) => e.event as UntisPeriod)
+        .toList();
 
     showDialog(
       context: context,
@@ -287,6 +303,27 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                 mainAxisSize: MainAxisSize.max,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Row(
+                    children: [
+                      for (var currentEvent in events)
+                        Expanded(
+                          child: GestureDetector(
+                            child: Container(
+                              padding: EdgeInsets.all(4),
+                              color: colors.secondary,
+                              child: Center(
+                                child: Text(
+                                  currentEvent.subject!.name,
+                                ),
+                              )
+                            ),
+                            onTap: () {
+
+                            },
+                          ),
+                        )
+                    ],
+                  ),
                   Text(
                     period.subject!.longName + " (" + period.subject!.name + ")", // Physics (PH)
                     style: TextStyle(
