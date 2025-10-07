@@ -362,6 +362,31 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                                 color: Colors.white,
                               ),
                             ),
+                            SizedBox(height: 10),
+                            Text.rich(
+                                TextSpan(
+                                  text: "Room: ",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: hasRoom ? isPlannedRoom ? period.planRooms.first.name : period.room!.name : "?",
+                                      style: TextStyle(
+                                        decoration: hasRoom && !isPlannedRoom ? TextDecoration.lineThrough : TextDecoration.none,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: hasRoom && !isPlannedRoom ? " -> " + period.planRooms.first.name : "",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                            ),
                             Expanded(child: Container()),
                             Center(
                               child: SizedBox(
@@ -379,48 +404,6 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                       )
                     )
                   ),
-                  /*
-                  Text(
-                    period.subject!.longName + " (" + period.subject!.name + ")", // Physics (PH)
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: colors.onPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text.rich(
-                    TextSpan(
-                      text: "Room: ",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: colors.onPrimary,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: hasRoom ? isPlannedRoom ? period.planRooms.first.name : period.room!.name : "?",
-                          style: TextStyle(
-                            decoration: hasRoom && !isPlannedRoom ? TextDecoration.lineThrough : TextDecoration.none,
-                            color: colors.onPrimary,
-                          ),
-                        ),
-                        TextSpan(
-                          text: hasRoom && !isPlannedRoom ? " -> " + period.planRooms.first.name : "",
-                          style: TextStyle(
-                            color: colors.onPrimary,
-                          ),
-                        ),
-                      ],
-                    )
-                  ),
-                  Expanded(child: Container()),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close the popup
-                    },
-                    child: Text('Close'),
-                  ),
-                  */
                 ],
               ),
             ),
