@@ -354,20 +354,15 @@ class _TimetableCalendarViewState extends State<TimetableCalendarView> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  Text(
-                                    period.subject!.longName, // + " (" + period.subject!.name + ")", // Physics (PH)
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              period.subject!.longName, // + " (" + period.subject!.name + ")", // Physics (PH)
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
+                            Expanded(child: Container()),
                             Center(
                               child: SizedBox(
                                 width: 200,
