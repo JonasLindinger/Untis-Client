@@ -1,4 +1,4 @@
-# AI Generated README ✅
+> 🤖 **AI-Generated README**
 
 # UNTIS Client for Flutter
 
@@ -45,3 +45,4 @@
 - Fully Flutter-compatible for mobile, web, and desktop apps
 - Open for contributions: feel free to add missing API endpoints or improve the wrapper
 - Make your Flutter apps interact with UNTIS easily and efficiently!
+
